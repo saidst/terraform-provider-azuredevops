@@ -12,14 +12,15 @@ import (
 )
 
 func TestAzureDevOpsProject_CreatePolicy_DoesStuff(t *testing.T) {
-	clients, err := getAzdoClient(os.Getenv("AZDO_PERSONAL_ACCESS_TOKEN"), os.Getenv("AZDO_ORG_SERVICE_URL"))
+	adoPat, adoUrl := os.Getenv("AZDO_PERSONAL_ACCESS_TOKEN"), os.Getenv("AZDO_ORG_SERVICE_URL")
+	clients, err := getAzdoClient(adoPat, adoUrl)
 	resource := resourcePolicyMinReviewers()
 	config := map[string]interface{}{
 		"project_id": "foo",
 	}
 
 	resourceData := schema.TestResourceDataRaw(t, resource.Schema, config)
-	err := resourcePolicyMinReviewersCreate(resourceData, clients)
+	resourcePolicyMinReviewersCreate(resourceData, clients)
 
 	log.Printf("logging foo %s\n", err)
 }
