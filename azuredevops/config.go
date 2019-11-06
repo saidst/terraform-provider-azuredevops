@@ -10,6 +10,7 @@ import (
 	"github.com/microsoft/azure-devops-go-api/azuredevops/core"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/git"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/graph"
+	"github.com/microsoft/azure-devops-go-api/azuredevops/policy"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/memberentitlementmanagement"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/operations"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/serviceendpoint"
@@ -30,6 +31,7 @@ type aggregatedClient struct {
 	OperationsClient              operations.Client
 	ServiceEndpointClient         serviceendpoint.Client
 	MemberEntitleManagementClient memberentitlementmanagement.Client
+	PolicyClient				  policy.Client
 	ctx                           context.Context
 }
 

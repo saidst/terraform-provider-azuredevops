@@ -35,3 +35,18 @@ resource "azuredevops_build_definition" "nightly_build" {
     service_connection_id = azuredevops_serviceendpoint.github_serviceendpoint.id
   }
 }
+
+resource "azuredevops_azure_git_repository" "repository" {
+  project_id = azuredevops_project.project.id
+  name       = "Sample Repo"
+  initialization {
+    init_type = "Clean"
+  }
+}
+
+resource "azuredevops_policy_min_reviews" "policy-review" {
+  project_id  = azuredevops_project.project.id
+  scope {
+      repository_id = azuredevops_azure_git_repository.repository.id
+  }
+}
