@@ -10,9 +10,9 @@ import (
 	"github.com/microsoft/azure-devops-go-api/azuredevops/core"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/git"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/graph"
-	"github.com/microsoft/azure-devops-go-api/azuredevops/policy"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/memberentitlementmanagement"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/operations"
+	"github.com/microsoft/azure-devops-go-api/azuredevops/policy"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/serviceendpoint"
 )
 
@@ -31,7 +31,7 @@ type aggregatedClient struct {
 	OperationsClient              operations.Client
 	ServiceEndpointClient         serviceendpoint.Client
 	MemberEntitleManagementClient memberentitlementmanagement.Client
-	PolicyClient				  policy.Client
+	PolicyClient                  policy.Client
 	ctx                           context.Context
 }
 
@@ -97,6 +97,11 @@ func getAzdoClient(azdoPAT string, organizationURL string) (*aggregatedClient, e
 		return nil, err
 	}
 
+	policyClient, err := policy.NewClient(ctx, connection)
+	if err != nil {
+		log.Printf("getAzdoClient(): policy.NewClient failed.")
+	}
+
 	aggregatedClient := &aggregatedClient{
 		CoreClient:                    coreClient,
 		BuildClient:                   buildClient,
@@ -104,6 +109,7 @@ func getAzdoClient(azdoPAT string, organizationURL string) (*aggregatedClient, e
 		GraphClient:                   graphClient,
 		OperationsClient:              operationsClient,
 		ServiceEndpointClient:         serviceEndpointClient,
+		PolicyClient:                  policyClient,
 		MemberEntitleManagementClient: memberentitlementmanagementClient,
 		ctx:                           ctx,
 	}

@@ -4,8 +4,8 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	// "github.com/microsoft/azure-devops-go-api/azuredevops/policy"
-	// "github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/converter"
+	"github.com/microsoft/azure-devops-go-api/azuredevops/policy"
+	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/converter"
 )
 
 func resourcePolicyMinReviewers() *schema.Resource {
@@ -67,21 +67,30 @@ func resourcePolicyMinReviewers() *schema.Resource {
 }
 
 func resourcePolicyMinReviewersCreate(d *schema.ResourceData, m interface{}) error {
-	// clients := m.(*aggregatedClient)
-	// projectID := d.Get("project_id").(string)
-	// policyTypes, err := clients.PolicyClient.GetPolicyTypes(clients.ctx, policy.GetPolicyTypesArgs{
-	// 	Project: converter.String(projectID),
-	// })
-	// if err != nil {
-	// 	log.Printf("something bad happened %s\n", err)
-	// }
-	// if (policyTypes != nil){
-	// 	log.Printf("resource_policy_min_reviewers get policy types %+v\n", policyTypes)
-	// }
+	clients := m.(*aggregatedClient)
+	projectID := d.Get("project_id").(string)
+	policyTypes, err := clients.PolicyClient.GetPolicyTypes(clients.ctx, policy.GetPolicyTypesArgs{
+		Project: converter.String(projectID),
+	})
+	if err != nil {
+		log.Printf("something bad happened %s\n", err)
+	}
+	if policyTypes != nil {
+		log.Printf("resource_policy_min_reviewers get policy types %+v\n", policyTypes)
+	}
+
+	var minApproverPolicyType policy.PolicyType
+
+	for _, policyType := range *policyTypes {
+		if *policyType.DisplayName == "Minimum number of reviewers" {
+			minApproverPolicyType = policyType
+			break
+		}
+	}
+
+	log.Printf("projectID is %s\n", minApproverPolicyType.Id)
 
 	policy_id := "1234" //this should come from api
-	projectID := d.Get("project_id").(string)
-	log.Printf("projectID is %s\n", projectID)
 	d.SetId(policy_id)
 	return resourcePolicyMinReviewersRead(d, m)
 }

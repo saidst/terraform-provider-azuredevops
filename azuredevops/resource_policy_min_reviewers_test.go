@@ -14,9 +14,11 @@ import (
 func TestAzureDevOpsProject_CreatePolicy_DoesStuff(t *testing.T) {
 	adoPat, adoUrl := os.Getenv("AZDO_PERSONAL_ACCESS_TOKEN"), os.Getenv("AZDO_ORG_SERVICE_URL")
 	clients, err := getAzdoClient(adoPat, adoUrl)
+	project, err := projectRead(clients, "", "az-infrax")
+
 	resource := resourcePolicyMinReviewers()
 	config := map[string]interface{}{
-		"project_id": "foo",
+		"project_id": project.Id.String(),
 	}
 
 	resourceData := schema.TestResourceDataRaw(t, resource.Schema, config)
