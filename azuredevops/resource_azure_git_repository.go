@@ -98,7 +98,7 @@ func resourceAzureGitRepositoryCreate(d *schema.ResourceData, m interface{}) err
 	if err != nil {
 		return fmt.Errorf("Error expanding repository resource data: %+v", err)
 	}
-
+	fmt.Printf("This is the value of the things %s, %s", initialization.sourceType, repo.Name)
 	createdRepo, err := createAzureGitRepository(clients, repo.Name, projectID)
 	if err != nil {
 		return fmt.Errorf("Error creating repository in Azure DevOps: %+v", err)
@@ -287,13 +287,20 @@ func expandAzureGitRepository(d *schema.ResourceData) (*git.GitRepository, *repo
 		sourceURL:  initValues["source_url"].(string),
 	}
 
-	if initialization.initType == "Fork" || initialization.initType == "Import" {
-		return nil, nil, nil, fmt.Errorf("Initialization strategy not implemented: %s", initialization.initType)
+	if initialization.initType == "Import" {
+		return nil, nil, nil, fmt.Errorf("Initialization Import strategy not implemented: %s", initialization.initType)
 	}
 
 	if initialization.initType == "Clean" {
 		initialization.sourceType = ""
 		initialization.sourceURL = ""
+	}
+
+	if initialization.initType == "Fork" {
+		if initialization.sourceType == "" || initialization.sourceURL == "" {
+			return nil, nil, nil, fmt.Errorf("Please provide a sourceType and sourceURL: %s , %s", initialization.sourceType, initialization.sourceURL)
+		}
+		//return nil, nil, nil, fmt.Errorf("Initialization fork strategy not implemented: %s", initialization.initType)
 	}
 
 	return repo, initialization, &projectID, nil
