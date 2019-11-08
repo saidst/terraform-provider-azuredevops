@@ -3,6 +3,7 @@ package tfhelper
 import (
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/secretmemo"
@@ -61,4 +62,12 @@ func GenerateSecreteMemoSchema(secretKey string) (string, *schema.Schema) {
 		Sensitive:   true,
 	}
 	return calcSecretHashKey(secretKey), &out
+}
+
+// ParseProjectIDAndResourceID parses from the schema's resource data.
+func ParseProjectIDAndResourceID(d *schema.ResourceData) (string, int, error) {
+	projectID := d.Get("project_id").(string)
+	resourceID, err := strconv.Atoi(d.Id())
+
+	return projectID, resourceID, err
 }

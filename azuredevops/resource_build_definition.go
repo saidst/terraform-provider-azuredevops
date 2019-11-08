@@ -5,7 +5,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/config"
 	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/converter"
+	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/tfhelper"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -33,6 +35,15 @@ func resourceBuildDefinition() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "",
+			},
+			"variable_groups": {
+				Type: schema.TypeSet,
+				Elem: &schema.Schema{
+					Type:         schema.TypeInt,
+					ValidateFunc: validation.IntAtLeast(1),
+				},
+				MinItems: 1,
+				Optional: true,
 			},
 			"agent_pool_name": {
 				Type:     schema.TypeString,
@@ -77,15 +88,15 @@ func resourceBuildDefinition() *schema.Resource {
 }
 
 func resourceBuildDefinitionCreate(d *schema.ResourceData, m interface{}) error {
-	clients := m.(*aggregatedClient)
+	clients := m.(*config.AggregatedClient)
 	buildDefinition, projectID, err := expandBuildDefinition(d)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating resource Build Definition: %+v", err)
 	}
 
 	createdBuildDefinition, err := createBuildDefinition(clients, buildDefinition, projectID)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating resource Build Definition: %+v", err)
 	}
 
 	flattenBuildDefinition(d, createdBuildDefinition, projectID)
@@ -100,6 +111,8 @@ func flattenBuildDefinition(d *schema.ResourceData, buildDefinition *build.Build
 	d.Set("repository", flattenRepository(buildDefinition))
 	d.Set("agent_pool_name", *buildDefinition.Queue.Pool.Name)
 
+	d.Set("variable_groups", flattenVariableGroups(buildDefinition))
+
 	revision := 0
 	if buildDefinition.Revision != nil {
 		revision = *buildDefinition.Revision
@@ -108,8 +121,22 @@ func flattenBuildDefinition(d *schema.ResourceData, buildDefinition *build.Build
 	d.Set("revision", revision)
 }
 
-func createBuildDefinition(clients *aggregatedClient, buildDefinition *build.BuildDefinition, project string) (*build.BuildDefinition, error) {
-	createdBuild, err := clients.BuildClient.CreateDefinition(clients.ctx, build.CreateDefinitionArgs{
+func flattenVariableGroups(buildDefinition *build.BuildDefinition) []int {
+	if buildDefinition.VariableGroups == nil {
+		return nil
+	}
+
+	variableGroups := make([]int, len(*buildDefinition.VariableGroups))
+
+	for i, variableGroup := range *buildDefinition.VariableGroups {
+		variableGroups[i] = *variableGroup.Id
+	}
+
+	return variableGroups
+}
+
+func createBuildDefinition(clients *config.AggregatedClient, buildDefinition *build.BuildDefinition, project string) (*build.BuildDefinition, error) {
+	createdBuild, err := clients.BuildClient.CreateDefinition(clients.Ctx, build.CreateDefinitionArgs{
 		Definition: buildDefinition,
 		Project:    &project,
 	})
@@ -118,14 +145,14 @@ func createBuildDefinition(clients *aggregatedClient, buildDefinition *build.Bui
 }
 
 func resourceBuildDefinitionRead(d *schema.ResourceData, m interface{}) error {
-	clients := m.(*aggregatedClient)
-	projectID, buildDefinitionID, err := parseIdentifiers(d)
+	clients := m.(*config.AggregatedClient)
+	projectID, buildDefinitionID, err := tfhelper.ParseProjectIDAndResourceID(d)
 
 	if err != nil {
 		return err
 	}
 
-	buildDefinition, err := clients.BuildClient.GetDefinition(clients.ctx, build.GetDefinitionArgs{
+	buildDefinition, err := clients.BuildClient.GetDefinition(clients.Ctx, build.GetDefinitionArgs{
 		Project:      &projectID,
 		DefinitionId: &buildDefinitionID,
 	})
@@ -143,13 +170,13 @@ func resourceBuildDefinitionDelete(d *schema.ResourceData, m interface{}) error 
 		return nil
 	}
 
-	clients := m.(*aggregatedClient)
-	projectID, buildDefinitionID, err := parseIdentifiers(d)
+	clients := m.(*config.AggregatedClient)
+	projectID, buildDefinitionID, err := tfhelper.ParseProjectIDAndResourceID(d)
 	if err != nil {
 		return err
 	}
 
-	err = clients.BuildClient.DeleteDefinition(m.(*aggregatedClient).ctx, build.DeleteDefinitionArgs{
+	err = clients.BuildClient.DeleteDefinition(m.(*config.AggregatedClient).Ctx, build.DeleteDefinitionArgs{
 		Project:      &projectID,
 		DefinitionId: &buildDefinitionID,
 	})
@@ -158,13 +185,13 @@ func resourceBuildDefinitionDelete(d *schema.ResourceData, m interface{}) error 
 }
 
 func resourceBuildDefinitionUpdate(d *schema.ResourceData, m interface{}) error {
-	clients := m.(*aggregatedClient)
+	clients := m.(*config.AggregatedClient)
 	buildDefinition, projectID, err := expandBuildDefinition(d)
 	if err != nil {
 		return err
 	}
 
-	updatedBuildDefinition, err := clients.BuildClient.UpdateDefinition(m.(*aggregatedClient).ctx, build.UpdateDefinitionArgs{
+	updatedBuildDefinition, err := clients.BuildClient.UpdateDefinition(m.(*config.AggregatedClient).Ctx, build.UpdateDefinitionArgs{
 		Definition:   buildDefinition,
 		Project:      &projectID,
 		DefinitionId: buildDefinition.Id,
@@ -176,13 +203,6 @@ func resourceBuildDefinitionUpdate(d *schema.ResourceData, m interface{}) error 
 
 	flattenBuildDefinition(d, updatedBuildDefinition, projectID)
 	return nil
-}
-
-func parseIdentifiers(d *schema.ResourceData) (string, int, error) {
-	projectID := d.Get("project_id").(string)
-	buildDefinitionID, err := strconv.Atoi(d.Id())
-
-	return projectID, buildDefinitionID, err
 }
 
 func flattenRepository(buildDefiniton *build.BuildDefinition) interface{} {
@@ -211,6 +231,13 @@ func flattenRepository(buildDefiniton *build.BuildDefinition) interface{} {
 func expandBuildDefinition(d *schema.ResourceData) (*build.BuildDefinition, string, error) {
 	projectID := d.Get("project_id").(string)
 	repositories := d.Get("repository").(*schema.Set).List()
+
+	variableGroupsInterface := d.Get("variable_groups").(*schema.Set).List()
+	variableGroups := make([]build.VariableGroup, len(variableGroupsInterface))
+
+	for i, variableGroup := range variableGroupsInterface {
+		variableGroups[i] = *buildVariableGroup(variableGroup.(int))
+	}
 
 	// Note: If configured, this will be of length 1 based on the schema definition above.
 	if len(repositories) != 1 {
@@ -260,10 +287,17 @@ func expandBuildDefinition(d *schema.ResourceData) (*build.BuildDefinition, stri
 				Name: &agentPoolName,
 			},
 		},
-		QueueStatus: &build.DefinitionQueueStatusValues.Enabled,
-		Type:        &build.DefinitionTypeValues.Build,
-		Quality:     &build.DefinitionQualityValues.Definition,
+		QueueStatus:    &build.DefinitionQueueStatusValues.Enabled,
+		Type:           &build.DefinitionTypeValues.Build,
+		Quality:        &build.DefinitionQualityValues.Definition,
+		VariableGroups: &variableGroups,
 	}
 
 	return &buildDefinition, projectID, nil
+}
+
+func buildVariableGroup(id int) *build.VariableGroup {
+	return &build.VariableGroup{
+		Id: &id,
+	}
 }

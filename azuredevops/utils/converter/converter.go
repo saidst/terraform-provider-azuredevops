@@ -30,6 +30,15 @@ func ToString(value *string, defaultValue string) string {
 	return defaultValue
 }
 
+// ToBool Given a pointer return its value, or a default value of the pointer is nil
+func ToBool(value *bool, defaultValue bool) bool {
+	if value != nil {
+		return *value
+	}
+
+	return defaultValue
+}
+
 // AccountLicenseType Get a pointer to an AccountLicenseType
 func AccountLicenseType(accountLicenseTypeValue string) (*licensing.AccountLicenseType, error) {
 	var accountLicenseType licensing.AccountLicenseType
@@ -47,7 +56,7 @@ func AccountLicenseType(accountLicenseTypeValue string) (*licensing.AccountLicen
 	case "stakeholder":
 		accountLicenseType = licensing.AccountLicenseTypeValues.Stakeholder
 	default:
-		return nil, fmt.Errorf("Error converting to AccountLicenseType in Azure DevOps: %+v", accountLicenseTypeValue)
+		return nil, fmt.Errorf("Error unable to match given AccountLicenseType:%s", accountLicenseTypeValue)
 	}
 	return &accountLicenseType, nil
 }
