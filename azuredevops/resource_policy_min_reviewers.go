@@ -1,8 +1,8 @@
 package azuredevops
 
 import (
-	"log"
-
+	"strconv"
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/policy"
 	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/converter"
@@ -66,33 +66,45 @@ func resourcePolicyMinReviewers() *schema.Resource {
 	}
 }
 
+var policyTypeMinReviewer = "fa4e907d-c16b-4a4c-9dfa-4906e5d171dd";
+
 func resourcePolicyMinReviewersCreate(d *schema.ResourceData, m interface{}) error {
 	clients := m.(*aggregatedClient)
 	projectID := d.Get("project_id").(string)
-	policyTypes, err := clients.PolicyClient.GetPolicyTypes(clients.ctx, policy.GetPolicyTypesArgs{
-		Project: converter.String(projectID),
-	})
-	if err != nil {
-		log.Printf("something bad happened %s\n", err)
-	}
-	if policyTypes != nil {
-		log.Printf("resource_policy_min_reviewers get policy types %+v\n", policyTypes)
-	}
-
-	var minApproverPolicyType policy.PolicyType
-
-	for _, policyType := range *policyTypes {
-		if *policyType.DisplayName == "Minimum number of reviewers" {
-			minApproverPolicyType = policyType
-			break
+	policy_id, _ := uuid.Parse(policyTypeMinReviewer)
+	
+	var scopes []map[string]interface{}
+	tfScopes := d.Get("scope").(*schema.Set).List()
+	for _, tfScope := range tfScopes {
+		tfScopeMap := tfScope.(map[string]interface{})
+		scope := map[string]interface{}{
+			"refName": tfScopeMap["repository_ref"].(string),
+			"matchKind": tfScopeMap["match_type"].(string),
+			"repositoryId": tfScopeMap["repository_id"].(string),
 		}
+		scopes = append(scopes, scope)
+	}	
+
+	createPolicyConfigurationArgs := policy.CreatePolicyConfigurationArgs{
+		Project: &projectID,
+		Configuration: &policy.PolicyConfiguration{
+			IsEnabled: converter.Bool(d.Get("enabled").(bool)),
+			IsBlocking: converter.Bool(d.Get("is_blocking").(bool)),
+			Type: &policy.PolicyTypeRef{
+				Id: &policy_id,
+			},
+			Settings: map[string]interface{}{
+				"minimumApproverCount": converter.Int(d.Get("minimum_approver_count").(int)),
+				"creatorVoteCounts": converter.Bool(d.Get("creator_vote_counts").(bool)),
+				"scope": scopes, 
+			},
+		},
 	}
 
-	log.Printf("projectID is %s\n", minApproverPolicyType.Id)
-
-	policy_id := "1234" //this should come from api
-	d.SetId(policy_id)
-	return resourcePolicyMinReviewersRead(d, m)
+	policyConfiguration, err := clients.PolicyClient.CreatePolicyConfiguration(clients.ctx, createPolicyConfigurationArgs)
+	resourceId := *policyConfiguration.Id
+	d.SetId(strconv.Itoa(resourceId))
+	return err
 }
 
 func resourcePolicyMinReviewersRead(d *schema.ResourceData, m interface{}) error {
