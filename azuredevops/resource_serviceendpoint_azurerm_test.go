@@ -63,8 +63,9 @@ func TestAzureDevOpsServiceEndpointAzureRM_ExpandFlatten_Roundtrip(t *testing.T)
 	resourceData := schema.TestResourceDataRaw(t, resourceServiceEndpointAzureRM().Schema, nil)
 	flattenServiceEndpointAzureRM(resourceData, &azurermTestServiceEndpointAzureRM, azurermTestServiceEndpointAzureRMProjectID)
 
-	serviceEndpointAfterRoundTrip, projectID := expandServiceEndpointAzureRM(resourceData)
+	serviceEndpointAfterRoundTrip, projectID, err := expandServiceEndpointAzureRM(resourceData)
 
+	require.Nil(t, err)
 	require.Equal(t, azurermTestServiceEndpointAzureRM, *serviceEndpointAfterRoundTrip)
 	require.Equal(t, azurermTestServiceEndpointAzureRMProjectID, projectID)
 }
