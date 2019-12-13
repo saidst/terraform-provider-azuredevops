@@ -32,7 +32,7 @@ func resourceServiceEndpointGitHub() *schema.Resource {
 }
 
 // Convert internal Terraform data structure to an AzDO data structure
-func expandServiceEndpointGitHub(d *schema.ResourceData) (*serviceendpoint.ServiceEndpoint, *string) {
+func expandServiceEndpointGitHub(d *schema.ResourceData) (*serviceendpoint.ServiceEndpoint, *string, error) {
 	serviceEndpoint, projectID := crud.DoBaseExpansion(d)
 	serviceEndpoint.Authorization = &serviceendpoint.EndpointAuthorization{
 		Parameters: &map[string]string{
@@ -43,7 +43,7 @@ func expandServiceEndpointGitHub(d *schema.ResourceData) (*serviceendpoint.Servi
 	serviceEndpoint.Type = converter.String("github")
 	serviceEndpoint.Url = converter.String("http://github.com")
 
-	return serviceEndpoint, projectID
+	return serviceEndpoint, projectID, nil
 }
 
 // Convert AzDO data structure to internal Terraform data structure

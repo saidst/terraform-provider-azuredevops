@@ -43,7 +43,7 @@ func resourceServiceEndpointDockerHub() *schema.Resource {
 }
 
 // Convert internal Terraform data structure to an AzDO data structure
-func expandServiceEndpointDockerHub(d *schema.ResourceData) (*serviceendpoint.ServiceEndpoint, *string) {
+func expandServiceEndpointDockerHub(d *schema.ResourceData) (*serviceendpoint.ServiceEndpoint, *string, error) {
 	serviceEndpoint, projectID := crud.DoBaseExpansion(d)
 	serviceEndpoint.Authorization = &serviceendpoint.EndpointAuthorization{
 		Parameters: &map[string]string{
@@ -59,7 +59,7 @@ func expandServiceEndpointDockerHub(d *schema.ResourceData) (*serviceendpoint.Se
 	}
 	serviceEndpoint.Type = converter.String("dockerregistry")
 	serviceEndpoint.Url = converter.String("https://hub.docker.com/")
-	return serviceEndpoint, projectID
+	return serviceEndpoint, projectID, nil
 }
 
 // Convert AzDO data structure to internal Terraform data structure

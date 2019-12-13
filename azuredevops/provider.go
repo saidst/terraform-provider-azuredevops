@@ -9,15 +9,16 @@ import (
 func Provider() *schema.Provider {
 	p := &schema.Provider{
 		ResourcesMap: map[string]*schema.Resource{
-			"azuredevops_build_definition":          resourceBuildDefinition(),
-			"azuredevops_project":                   resourceProject(),
-			"azuredevops_variable_group":            resourceVariableGroup(),
-			"azuredevops_serviceendpoint_github":    resourceServiceEndpointGitHub(),
-			"azuredevops_serviceendpoint_dockerhub": resourceServiceEndpointDockerHub(),
-			"azuredevops_azure_git_repository":      resourceAzureGitRepository(),
-			"azuredevops_user_entitlement":          resourceUserEntitlement(),
-			"azuredevops_group_membership":          resourceGroupMembership(),
-			"azuredevops_agent_pool":                resourceAzureAgentPool(),
+			"azuredevops_build_definition":           resourceBuildDefinition(),
+			"azuredevops_project":                    resourceProject(),
+			"azuredevops_variable_group":             resourceVariableGroup(),
+			"azuredevops_serviceendpoint_github":     resourceServiceEndpointGitHub(),
+			"azuredevops_serviceendpoint_dockerhub":  resourceServiceEndpointDockerHub(),
+			"azuredevops_serviceendpoint_kubernetes": resourceServiceEndpointKubernetes(),
+			"azuredevops_azure_git_repository":       resourceAzureGitRepository(),
+			"azuredevops_user_entitlement":           resourceUserEntitlement(),
+			"azuredevops_group_membership":           resourceGroupMembership(),
+			"azuredevops_agent_pool":                 resourceAzureAgentPool(),
 		},
 		DataSourcesMap: map[string]*schema.Resource{
 			"azuredevops_group":    dataGroup(),
