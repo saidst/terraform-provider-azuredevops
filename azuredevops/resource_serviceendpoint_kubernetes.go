@@ -23,10 +23,11 @@ func makeSchemaAzureSubscription(r *schema.Resource) {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"azure_environment": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Default:     "AzureCloud",
-					Description: "type of azure cloud: AzureCloud",
+					Type:         schema.TypeString,
+					Optional:     true,
+					Default:      "AzureCloud",
+					Description:  "type of azure cloud: AzureCloud",
+					ValidateFunc: validation.StringInSlice([]string{"AzureCloud"}, false),
 				},
 				"cluster_name": {
 					Type:        schema.TypeString,
@@ -34,9 +35,10 @@ func makeSchemaAzureSubscription(r *schema.Resource) {
 					Description: "name of aks-resource",
 				},
 				"subscription_id": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "id of azure subscription",
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "id of azure subscription",
+					ValidateFunc: validation.IsUUID,
 				},
 				"subscription_name": {
 					Type:        schema.TypeString,
@@ -44,9 +46,10 @@ func makeSchemaAzureSubscription(r *schema.Resource) {
 					Description: "name of azure subscription",
 				},
 				"tenant_id": {
-					Type:        schema.TypeString,
-					Required:    true,
-					Description: "id of aad-tenant",
+					Type:         schema.TypeString,
+					Required:     true,
+					Description:  "id of aad-tenant",
+					ValidateFunc: validation.IsUUID,
 				},
 				"resourcegroup_id": {
 					Type:        schema.TypeString,
@@ -117,9 +120,10 @@ func makeSchemaServiceAccount(r *schema.Resource) {
 func resourceServiceEndpointKubernetes() *schema.Resource {
 	r := crud.GenBaseServiceEndpointResource(flattenServiceEndpointKubernetes, expandServiceEndpointKubernetes)
 	r.Schema["apiserver_url"] = &schema.Schema{
-		Type:        schema.TypeString,
-		Required:    true,
-		Description: "URL to Kubernete's API-Server",
+		Type:         schema.TypeString,
+		Required:     true,
+		Description:  "URL to Kubernete's API-Server",
+		ValidateFunc: validation.IsURLWithHTTPorHTTPS,
 	}
 	r.Schema["authorization_type"] = &schema.Schema{
 		Type:         schema.TypeString,
