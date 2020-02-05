@@ -18,4 +18,5 @@ require (
 	golang.org/x/sync v0.0.0-20200317015054-43a5402ce75a // indirect
 	golang.org/x/sys v0.0.0-20200428200454-593003d681fa // indirect
 	golang.org/x/tools v0.0.0-20200428211048-dbf5ce1eac26 // indirect
+	gopkg.in/yaml.v2 v2.2.2
 )
