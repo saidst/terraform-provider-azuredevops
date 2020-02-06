@@ -17,4 +17,5 @@ The Azure DevOps provider can be used to configure Azure DevOps project in [Micr
 * [azuredevops_project](docs/r/project.html.markdown)
 * [azuredevops_user_entitlement](docs/r/user_entitlement.html.markdown)
 * [azuredevops_agent_pool](docs/r/agent_pool.html.markdown)
+* [azuredevops_serviceendpoint_kubernetes](docs/r/serviceendpoint_kubernetes.html.markdown)
 * [azuredevops_resource_authorization](docs/r/resource_authorization.html.markdown)
