@@ -50,12 +50,12 @@ func resourceResourceAuthorizationCreate(d *schema.ResourceData, m interface{}) 
 	clients := m.(*config.AggregatedClient)
 	authorizedResource, projectId, err := expandAuthorizedResource(d)
 	if err != nil {
-		return fmt.Errorf("Error creating resource authorized resource: %+v", err)
+		return fmt.Errorf("error creating resource authorized resource: %+v", err)
 	}
 
 	_, err = sendAuthorizedResourceToAPI(clients, authorizedResource, projectId)
 	if err != nil {
-		return fmt.Errorf("Error creating resource authorized resource: %+v", err)
+		return fmt.Errorf("error creating resource authorized resource: %+v", err)
 	}
 
 	return resourceResourceAuthorizationRead(d, m)
@@ -101,7 +101,7 @@ func resourceResourceAuthorizationDelete(d *schema.ResourceData, m interface{}) 
 	clients := m.(*config.AggregatedClient)
 	authorizedResource, projectId, err := expandAuthorizedResource(d)
 	if err != nil {
-		return fmt.Errorf("Error creating resource authorized resource: %+v", err)
+		return fmt.Errorf("error creating resource authorized resource: %+v", err)
 	}
 
 	// deletion works only by setting authorized to false
@@ -110,7 +110,7 @@ func resourceResourceAuthorizationDelete(d *schema.ResourceData, m interface{}) 
 
 	_, err = sendAuthorizedResourceToAPI(clients, authorizedResource, projectId)
 	if err != nil {
-		return fmt.Errorf("Error deleting resource authorized resource: %+v", err)
+		return fmt.Errorf("error deleting resource authorized resource: %+v", err)
 	}
 
 	return err
@@ -120,12 +120,12 @@ func resourceResourceAuthorizationUpdate(d *schema.ResourceData, m interface{}) 
 	clients := m.(*config.AggregatedClient)
 	authorizedResource, projectId, err := expandAuthorizedResource(d)
 	if err != nil {
-		return fmt.Errorf("Error creating resource authorized resource: %+v", err)
+		return fmt.Errorf("error creating resource authorized resource: %+v", err)
 	}
 
 	_, err = sendAuthorizedResourceToAPI(clients, authorizedResource, projectId)
 	if err != nil {
-		return fmt.Errorf("Error deleting resource authorized resource: %+v", err)
+		return fmt.Errorf("error deleting resource authorized resource: %+v", err)
 	}
 
 	return resourceResourceAuthorizationRead(d, m)
@@ -161,7 +161,7 @@ func sendAuthorizedResourceToAPI(clients *config.AggregatedClient, resourceRef *
 	if err != nil {
 		return nil, err
 	} else if len(*createdResourceRefs) == 0 {
-		return nil, fmt.Errorf("no project resources have been authorized.")
+		return nil, fmt.Errorf("no project resources have been authorized")
 	}
 
 	return &(*createdResourceRefs)[0], err
