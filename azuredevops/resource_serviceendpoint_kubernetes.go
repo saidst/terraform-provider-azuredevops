@@ -109,7 +109,7 @@ func makeSchemaServiceAccount(r *schema.Resource) {
 				},
 				"ca_cert": {
 					Type:        schema.TypeString,
-					Optional:    true,
+					Required:    true,
 					Description: "Service account certificate",
 				},
 			},
