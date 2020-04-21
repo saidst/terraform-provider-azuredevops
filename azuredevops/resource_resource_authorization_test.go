@@ -8,15 +8,16 @@ package azuredevops
 import (
 	"context"
 	"errors"
-	"github.com/microsoft/terraform-provider-azuredevops/azdosdkmocks"
 	"testing"
 
-	"github.com/Azure/go-autorest/autorest/to"
+	"github.com/microsoft/terraform-provider-azuredevops/azdosdkmocks"
+
 	"github.com/golang/mock/gomock"
 	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/build"
 	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/config"
+	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/converter"
 	"github.com/stretchr/testify/require"
 )
 
@@ -24,17 +25,17 @@ var projectId = "projectid"
 var endpointId = uuid.New()
 
 var resourceReferenceAuthorized = build.DefinitionResourceReference{
-	Authorized: to.BoolPtr(true),
-	Id:         to.StringPtr(endpointId.String()),
+	Authorized: converter.Bool(true),
+	Id:         converter.String(endpointId.String()),
 	Name:       nil,
-	Type:       to.StringPtr("endpoint"),
+	Type:       converter.String("endpoint"),
 }
 
 var resourceReferenceNotAuthorized = build.DefinitionResourceReference{
-	Authorized: to.BoolPtr(false),
-	Id:         to.StringPtr(endpointId.String()),
+	Authorized: converter.Bool(false),
+	Id:         converter.String(endpointId.String()),
 	Name:       nil,
-	Type:       to.StringPtr("endpoint"),
+	Type:       converter.String("endpoint"),
 }
 
 func init() {
