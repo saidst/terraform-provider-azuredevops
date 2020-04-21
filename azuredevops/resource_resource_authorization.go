@@ -3,12 +3,12 @@ package azuredevops
 import (
 	"context"
 	"fmt"
-	"github.com/Azure/go-autorest/autorest/to"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/microsoft/azure-devops-go-api/azuredevops/build"
 	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/config"
+	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/converter"
 )
 
 func resourceResourceAuthorization() *schema.Resource {
@@ -106,7 +106,7 @@ func resourceResourceAuthorizationDelete(d *schema.ResourceData, m interface{}) 
 
 	// deletion works only by setting authorized to false
 	// because the resource to delete might have had this parameter set to true, we overwrite it
-	authorizedResource.Authorized = to.BoolPtr(false)
+	authorizedResource.Authorized = converter.Bool(false)
 
 	_, err = sendAuthorizedResourceToAPI(clients, authorizedResource, projectId)
 	if err != nil {
@@ -141,10 +141,10 @@ func flattenAuthorizedResource(d *schema.ResourceData, authorizedResource *build
 
 func expandAuthorizedResource(d *schema.ResourceData) (*build.DefinitionResourceReference, string, error) {
 	resourceRef := build.DefinitionResourceReference{
-		Authorized: to.BoolPtr(d.Get("authorized").(bool)),
-		Id:         to.StringPtr(d.Get("resource_id").(string)),
+		Authorized: converter.Bool(d.Get("authorized").(bool)),
+		Id:         converter.String(d.Get("resource_id").(string)),
 		Name:       nil,
-		Type:       to.StringPtr(d.Get("type").(string)),
+		Type:       converter.String(d.Get("type").(string)),
 	}
 
 	return &resourceRef, d.Get("project_id").(string), nil
