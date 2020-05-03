@@ -15,6 +15,8 @@ import (
 	"github.com/microsoft/terraform-provider-azuredevops/azuredevops/utils/validate"
 )
 
+const errMsgTfConfigRead = "Error reading terraform configuration: %+v"
+
 type flatFunc func(d *schema.ResourceData, serviceEndpoint *serviceendpoint.ServiceEndpoint, projectID *string)
 type expandFunc func(d *schema.ResourceData) (*serviceendpoint.ServiceEndpoint, *string, error)
 type importFunc func(clients *config.AggregatedClient, id string) (string, string, error)
@@ -186,7 +188,7 @@ func genServiceEndpointCreateFunc(flatFunc flatFunc, expandFunc expandFunc) func
 		clients := m.(*config.AggregatedClient)
 		serviceEndpoint, projectID, err := expandFunc(d)
 		if err != nil {
-			return fmt.Errorf("Error reading terraform configuration: %+v", err)
+			return fmt.Errorf(errMsgTfConfigRead, err)
 		}
 
 		createdServiceEndpoint, err := createServiceEndpoint(clients, serviceEndpoint, projectID)
@@ -241,7 +243,7 @@ func genServiceEndpointUpdateFunc(flatFunc flatFunc, expandFunc expandFunc) sche
 		clients := m.(*config.AggregatedClient)
 		serviceEndpoint, projectID, err := expandFunc(d)
 		if err != nil {
-			return fmt.Errorf("Error reading terraform configuration: %+v", err)
+			return fmt.Errorf(errMsgTfConfigRead, err)
 		}
 
 		updatedServiceEndpoint, err := updateServiceEndpoint(clients, serviceEndpoint, projectID)
@@ -259,7 +261,7 @@ func genServiceEndpointDeleteFunc(expandFunc expandFunc) schema.DeleteFunc {
 		clients := m.(*config.AggregatedClient)
 		serviceEndpoint, projectID, err := expandFunc(d)
 		if err != nil {
-			return fmt.Errorf("Error reading terraform configuration: %+v", err)
+			return fmt.Errorf(errMsgTfConfigRead, err)
 		}
 
 		return deleteServiceEndpoint(clients, projectID, serviceEndpoint.Id)

@@ -208,7 +208,6 @@ func expandServiceEndpointKubernetes(d *schema.ResourceData) (*serviceendpoint.S
 		serviceEndpoint.Data = &map[string]string{
 			"authorizationType": "ServiceAccount",
 		}
-
 	}
 
 	return serviceEndpoint, projectID, nil
