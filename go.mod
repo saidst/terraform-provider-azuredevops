@@ -3,7 +3,6 @@ module github.com/microsoft/terraform-provider-azuredevops
 go 1.12
 
 require (
-	github.com/Azure/go-autorest/autorest/to v0.3.0
 	github.com/golang/mock v1.3.1
 	github.com/google/uuid v1.1.1
 	github.com/hashicorp/go-uuid v1.0.1
