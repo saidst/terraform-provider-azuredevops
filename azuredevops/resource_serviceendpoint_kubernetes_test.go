@@ -445,60 +445,64 @@ func TestAzureDevOpsServiceEndpointKubernetesForServiceAccountUpdateDoesNotSwall
 // validates that an apply followed by another apply (i.e., resource update) will be reflected in AzDO and the
 // underlying terraform state.
 func TestAccAzureDevOpsServiceEndpointKubernetesForAzureSubscriptionCreateAndUpdate(t *testing.T) {
-	tfSvcEpNode := terraformServiceEndpointNode
+	authorizationType := "AzureSubscription"
+	tfSvcEpNode := fmt.Sprintf("%s.%s", terraformServiceEndpointNode, "azure_subscription")
 
 	var attrTestChekFuncList []resource.TestCheckFunc
 	attrTestChekFuncList = append(
 		attrTestChekFuncList,
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "project_id"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "authorizationType"),
+		resource.TestCheckResourceAttrSet(terraformServiceEndpointNode, "project_id"),
+		resource.TestCheckResourceAttrSet(terraformServiceEndpointNode, "authorization_type"),
 		resource.TestCheckResourceAttrSet(tfSvcEpNode, "azureEnvironment"),
 		resource.TestCheckResourceAttrSet(tfSvcEpNode, "azureTenantId"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "azureSubscriptionId"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "azureSubscriptionName"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "clusterId"),
+		resource.TestCheckResourceAttrSet(tfSvcEpNode, "subscription_id"),
+		resource.TestCheckResourceAttrSet(tfSvcEpNode, "subscription_name"),
+		resource.TestCheckResourceAttrSet(tfSvcEpNode, "tenant_id"),
+		resource.TestCheckResourceAttrSet(tfSvcEpNode, "resourcegroup_id"),
 		resource.TestCheckResourceAttrSet(tfSvcEpNode, "namespace"),
+		resource.TestCheckResourceAttrSet(tfSvcEpNode, "cluster_name"),
 	)
 
-	testAccAzureDevOpsServiceEndpoint(t, attrTestChekFuncList)
+	testAccAzureDevOpsServiceEndpoint(t, attrTestChekFuncList, authorizationType)
 }
 
 // validates that an apply followed by another apply (i.e., resource update) will be reflected in AzDO and the
 // underlying terraform state.
 func TestAccAzureDevOpsServiceEndpointKubernetesForServiceAccountCreateAndUpdate(t *testing.T) {
-	tfSvcEpNode := terraformServiceEndpointNode
+	authorizationType := "ServiceAccount"
+	tfSvcEpNode := fmt.Sprintf("%s.%s", terraformServiceEndpointNode, "service_account")
 
 	var attrTestChekFuncList []resource.TestCheckFunc
 	attrTestChekFuncList = append(
 		attrTestChekFuncList,
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "project_id"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "authorizationType"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "clusterContext"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "kubeconfig"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "acceptUntrustedCerts"),
+		resource.TestCheckResourceAttrSet(terraformServiceEndpointNode, "project_id"),
+		resource.TestCheckResourceAttrSet(terraformServiceEndpointNode, "authorization_type"),
+		resource.TestCheckResourceAttrSet(tfSvcEpNode, "token"),
+		resource.TestCheckResourceAttrSet(tfSvcEpNode, "ca_cert"),
 	)
 
-	testAccAzureDevOpsServiceEndpoint(t, attrTestChekFuncList)
+	testAccAzureDevOpsServiceEndpoint(t, attrTestChekFuncList, authorizationType)
 }
 
 // validates that an apply followed by another apply (i.e., resource update) will be reflected in AzDO and the
 // underlying terraform state.
 func TestAccAzureDevOpsServiceEndpointKubernetesForKubeconfigCreateAndUpdate(t *testing.T) {
-	tfSvcEpNode := terraformServiceEndpointNode
+	authorizationType := "Kubeconfig"
+	tfSvcEpNode := fmt.Sprintf("%s.%s", terraformServiceEndpointNode, "kubeconfig")
 
 	var attrTestChekFuncList []resource.TestCheckFunc
 	attrTestChekFuncList = append(
 		attrTestChekFuncList,
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "project_id"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "authorizationType"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "clusterContext"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "apiToken"),
-		resource.TestCheckResourceAttrSet(tfSvcEpNode, "serviceAccountCertificate"),
+		resource.TestCheckResourceAttrSet(terraformServiceEndpointNode, "project_id"),
+		resource.TestCheckResourceAttrSet(terraformServiceEndpointNode, "authorization_type"),
+		resource.TestCheckResourceAttrSet(tfSvcEpNode, "kube_config"),
+		resource.TestCheckResourceAttrSet(tfSvcEpNode, "accept_untrusted_certs"),
+		resource.TestCheckResourceAttrSet(tfSvcEpNode, "cluster_context"),
 	)
-	testAccAzureDevOpsServiceEndpoint(t, attrTestChekFuncList)
+	testAccAzureDevOpsServiceEndpoint(t, attrTestChekFuncList, authorizationType)
 }
 
-func testAccAzureDevOpsServiceEndpoint(t *testing.T, attrTestChekFuncList []resource.TestCheckFunc) {
+func testAccAzureDevOpsServiceEndpoint(t *testing.T, attrTestChekFuncList []resource.TestCheckFunc, authorizationType string) {
 	projectName := testhelper.TestAccResourcePrefix + acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	serviceEndpointNameFirst := testhelper.TestAccResourcePrefix + acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
 	serviceEndpointNameSecond := testhelper.TestAccResourcePrefix + acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum)
@@ -523,10 +527,10 @@ func testAccAzureDevOpsServiceEndpoint(t *testing.T, attrTestChekFuncList []reso
 		CheckDestroy: testAccServiceEndpointKubernetesCheckDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testhelper.TestAccServiceEndpointKubernetesResource(projectName, serviceEndpointNameFirst),
+				Config: testhelper.TestAccServiceEndpointKubernetesResource(projectName, serviceEndpointNameFirst, authorizationType),
 				Check:  resource.ComposeTestCheckFunc(attrTestCheckFuncListNameFirst...),
 			}, {
-				Config: testhelper.TestAccServiceEndpointKubernetesResource(projectName, serviceEndpointNameSecond),
+				Config: testhelper.TestAccServiceEndpointKubernetesResource(projectName, serviceEndpointNameSecond, authorizationType),
 				Check:  resource.ComposeTestCheckFunc(attrTestCheckFuncListNameSecond...),
 			},
 		},

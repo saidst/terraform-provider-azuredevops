@@ -106,14 +106,73 @@ resource "azuredevops_serviceendpoint_dockerhub" "serviceendpoint" {
 	return fmt.Sprintf("%s\n%s", projectResource, serviceEndpointResource)
 }
 
-// TestAccServiceEndpointKubernetesResource HCL describing an AzDO service endpoint
-func TestAccServiceEndpointKubernetesResource(projectName string, serviceEndpointName string) string {
-	serviceEndpointResource := fmt.Sprintf(`
+// TestAccServiceEndpointKubernetesResource HCL describing an AzDO kubernetes service endpoint
+func TestAccServiceEndpointKubernetesResource(projectName string, serviceEndpointName string, authorizationType string) string {
+	var serviceEndpointResource string
+	switch authorizationType {
+	case "AzureSubscription":
+		serviceEndpointResource = fmt.Sprintf(`
 resource "azuredevops_serviceendpoint_kubernetes" "serviceendpoint" {
 	project_id             = azuredevops_project.project.id
 	service_endpoint_name  = "%s"
+	apiserver_url = "https://sample-kubernetes-cluster.hcp.westeurope.azmk8s.io"
+	authorization_type = "AzureSubscription"
+	azure_subscription {
+		subscription_id = "8a7aace5-66b1-66b1-66b1-8968a070edd2"
+		subscription_name = "Microsoft Azure DEMO"
+		tenant_id = "2e3a33f9-66b1-66b1-66b1-8968a070edd2"
+		resourcegroup_id = "sample-rg"
+		namespace = "default"
+		cluster_name = "sample-aks"
+	}
 }`, serviceEndpointName)
-
+	case "ServiceAccount":
+		serviceEndpointResource = fmt.Sprintf(`
+resource "azuredevops_serviceendpoint_kubernetes" "serviceendpoint" {
+	project_id            = azuredevops_project.project.id
+	service_endpoint_name = "%s"
+	apiserver_url         = "https://sample-kubernetes-cluster.hcp.westeurope.azmk8s.io"
+	authorization_type    = "ServiceAccount"
+	service_account {
+	  token   = "kubernetes_TEST_api_token"
+	  ca_cert = "kubernetes_TEST_ca_cert"
+	}
+}`, serviceEndpointName)
+	case "Kubeconfig":
+		serviceEndpointResource = fmt.Sprintf(`
+resource "azuredevops_serviceendpoint_kubernetes" "serviceendpoint" {
+	project_id            = azuredevops_project.project.id
+	service_endpoint_name = "%s"
+	apiserver_url         = "https://sample-kubernetes-cluster.hcp.westeurope.azmk8s.io"
+	authorization_type    = "Kubeconfig"
+	kubeconfig {
+		kube_config            = <<EOT
+								apiVersion: v1
+								clusters:
+								- cluster:
+									certificate-authority: fake-ca-file
+									server: https://1.2.3.4
+								name: development
+								contexts:
+								- context:
+									cluster: development
+									namespace: frontend
+									user: developer
+								name: dev-frontend
+								current-context: dev-frontend
+								kind: Config
+								preferences: {}
+								users:
+								- name: developer
+								user:
+									client-certificate: fake-cert-file
+									client-key: fake-key-file
+								EOT
+		accept_untrusted_certs = true
+		cluster_context        = "dev-frontend"
+	}
+}`, serviceEndpointName)
+	}
 	projectResource := TestAccProjectResource(projectName)
 	return fmt.Sprintf("%s\n%s", projectResource, serviceEndpointResource)
 }
@@ -122,14 +181,14 @@ resource "azuredevops_serviceendpoint_kubernetes" "serviceendpoint" {
 func TestAccServiceEndpointAzureRMResource(projectName string, serviceEndpointName string) string {
 	serviceEndpointResource := fmt.Sprintf(`
 resource "azuredevops_serviceendpoint_azurerm" "serviceendpointrm" {
-	project_id             = azuredevops_project.project.id
-	service_endpoint_name  = "%s"
-	azurerm_spn_clientid 	="e318e66b-ec4b-4dff-9124-41129b9d7150"
+	project_id                = azuredevops_project.project.id
+	service_endpoint_name     = "%s"
+	azurerm_spn_clientid      ="e318e66b-ec4b-4dff-9124-41129b9d7150"
 	azurerm_spn_tenantid      = "9c59cbe5-2ca1-4516-b303-8968a070edd2"
     azurerm_subscription_id   = "3b0fee91-c36d-4d70-b1e9-fc4b9d608c3d"
     azurerm_subscription_name = "Microsoft Azure DEMO"
     azurerm_scope             = "/subscriptions/3b0fee91-c36d-4d70-b1e9-fc4b9d608c3d"
-	azurerm_spn_clientsecret ="d9d210dd-f9f0-4176-afb8-a4df60e1ae72"
+	azurerm_spn_clientsecret  ="d9d210dd-f9f0-4176-afb8-a4df60e1ae72"
 
 }`, serviceEndpointName)
 
